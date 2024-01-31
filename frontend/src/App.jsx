@@ -5,17 +5,29 @@ import { useEffect, useState } from 'react';
 function App() {
 
   const contractAddress = '0xe0bc858636393fac5485bCDCF031F42F4C6BB75c';
-  const [msg, setMsg] = useState('')
-
-
-  
-
   async function requestAccount() {
     await window.ethereum.request({ method: "eth_requestAccounts" });
   }
 
-  const [inputMessage, setInputMessage] = useState(""); // Renamed state variable
+  const [inputMessage, setInputMessage] = useState("");
   const [getmsg, setGetmsg] = useState("display Here");
+  const [provider, setProvider] = useState('')
+  const [signer, setSigner] = useState('')
+
+  async function connect () {
+    let signer = null;
+
+    let provider;
+    if (window.ethereum == null) {
+        provider = ethers.getDefaultProvider()
+
+    } else {
+
+        provider = new ethers.BrowserProvider(window.ethereum)
+        signer = await provider.getSigner();
+        setSigner(signer.address)
+    }
+  }
 
   async function sendMessageToContract() {
     // Renamed function
@@ -32,8 +44,9 @@ function App() {
       try {
         const transaction = await contract.setMessage(inputMessage);
         await transaction.wait();
-        console.log("msg sent");
-        setInputMessage(" ");
+        alert('Message sent')
+        setInputMessage("");
+
       } catch (err) {
         console.error("Error:", err);
       }
@@ -70,10 +83,11 @@ function App() {
     <div className="flex flex-col w-full h-screen ">
         <div className='flex p-5 justify-between'>
           <h1 className=''>MsG dApp</h1>
-          {/* <button className='self-end bg-gradient-to-br from-lime-400 to-lime-200 py-2 px-4 shadow rounded-md shadow '>connect</button> */}
+          <h4>{signer && signer}</h4>
+          {signer ? <button className='self-end bg-gradient-to-br from-lime-400 to-lime-200 py-2 px-4 shadow rounded-md shadow '>Disconnect</button> : <button onClick={connect} className='self-end bg-gradient-to-br from-lime-400 to-lime-200 py-2 px-4 shadow rounded-md shadow '>connect</button>}
         </div>
-
-        <div className='flex flex-col'>
+        <hr />
+        <div className='flex flex-col pt-5'>
           <div className='flex w-6/12 m-auto gap-x-4'>
             <h4 className='text-slate-300'>Onchain message:</h4>
             <h4 onClick={getMessageToContract}>{getmsg}</h4>
